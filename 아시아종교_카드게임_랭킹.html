@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아시아 종교 카드 컬렉션 게임</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',sans-serif;background:#f4f3ef;min-height:100vh;padding:1.25rem 1rem;color:#1a1a1a;}
+.wrap{max-width:700px;margin:0 auto;background:#fff;border-radius:16px;padding:1.5rem;box-shadow:0 2px 16px rgba(0,0,0,0.07);}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;gap:8px;flex-wrap:wrap;}
+.title{font-size:16px;font-weight:700;color:#111;}
+.hud{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
+.hud-pill{font-size:12px;color:#666;background:#f5f5f0;border:1px solid #e8e8e3;border-radius:8px;padding:4px 11px;}
+.hud-pill span{font-weight:700;color:#111;}
+.score-pill{font-size:12px;font-weight:700;padding:4px 11px;border-radius:8px;border:1px solid #c4c0f0;background:#eeedfe;color:#26215C;}
+.combo-pill{font-size:12px;font-weight:700;padding:4px 11px;border-radius:8px;border:1px solid #FAC775;background:#FAEEDA;color:#412402;display:none;}
+.combo-pill.show{display:inline-block;}
+.tab-row{display:flex;gap:4px;margin-bottom:.85rem;}
+.tab{background:#f5f5f0;border:1px solid #e8e8e3;border-radius:8px;padding:5px 14px;font-size:12px;color:#888;cursor:pointer;font-family:inherit;}
+.tab.active{background:#fff;border-color:#aaa;color:#111;font-weight:700;}
+.prog-label{font-size:12px;color:#888;margin-bottom:4px;}
+.prog-track{height:7px;background:#f0f0eb;border-radius:99px;overflow:hidden;margin-bottom:.85rem;}
+.prog-fill{height:100%;border-radius:99px;transition:width .4s;background:#534AB7;}
+.r-bars{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:.85rem;}
+.r-bar{background:#f8f8f5;border:1px solid #ebebeb;border-radius:8px;padding:7px 10px;}
+.r-bar-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.r-name{font-size:11px;font-weight:700;}
+.r-count{font-size:11px;color:#888;}
+.r-track{height:4px;background:#e8e8e8;border-radius:99px;overflow:hidden;}
+.r-fill{height:100%;border-radius:99px;transition:width .4s;}
+.q-card{background:#fff;border:1px solid #e8e8e3;border-radius:12px;padding:1.1rem;margin-bottom:.65rem;}
+.q-meta{display:flex;align-items:center;gap:7px;margin-bottom:9px;flex-wrap:wrap;}
+.q-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:8px;}
+.q-num{font-size:11px;color:#888;}
+.retry-badge{display:none;background:#FAEEDA;color:#854F0B;font-size:10px;padding:3px 9px;border-radius:8px;font-weight:500;}
+.retry-badge.show{display:inline-flex;}
+.q-text{font-size:15px;font-weight:700;color:#111;line-height:1.65;margin-bottom:8px;}
+.hint-row{display:flex;align-items:center;gap:8px;}
+.hint-btn{font-size:11px;color:#666;background:#f5f5f0;border:1px solid #e8e8e3;border-radius:8px;padding:4px 10px;cursor:pointer;font-family:inherit;}
+.hint-btn:disabled{opacity:.4;cursor:default;}
+.hint-box{font-size:12px;color:#185FA5;background:#E6F1FB;border:1px solid #85B7EB;border-radius:8px;padding:6px 10px;display:none;line-height:1.5;margin-top:7px;}
+.hint-box.show{display:block;}
+.hint-used-badge{font-size:10px;color:#B85C00;background:#FAEEDA;border-radius:8px;padding:2px 8px;display:none;}
+.hint-used-badge.show{display:inline-block;}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:.65rem;}
+.cbtn{background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px 12px;font-size:13px;color:#111;cursor:pointer;text-align:left;transition:all .15s;line-height:1.4;font-family:inherit;}
+.cbtn:hover:not(:disabled){background:#f5f5f0;}
+.cbtn.correct{border-color:#1D9E75;background:#E1F5EE;color:#0F6E56;font-weight:700;}
+.cbtn.wrong{border-color:#E24B4A;background:#FCEBEB;color:#A32D2D;}
+.cbtn:disabled{cursor:default;}
+.feedback{border-radius:8px;padding:9px 13px;font-size:13px;margin-bottom:.65rem;display:none;line-height:1.5;}
+.feedback.show{display:block;}
+.feedback.ok{background:#E1F5EE;color:#0F6E56;border:1px solid #5DCAA5;}
+.feedback.no{background:#FCEBEB;color:#A32D2D;border:1px solid #F09595;}
+.score-popup{font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;display:inline-block;margin-left:5px;background:#eeedfe;color:#534AB7;border:1px solid #AFA9EC;}
+.combo-banner{display:none;align-items:center;gap:10px;border-radius:8px;padding:9px 13px;margin-bottom:.65rem;border:1px solid #FAC775;background:#FAEEDA;}
+.combo-banner.show{display:flex;}
+.cb-num{font-size:20px;font-weight:700;color:#854F0B;}
+.cb-txt{font-size:13px;color:#633806;}
+.new-card-banner{display:none;align-items:center;gap:11px;background:#f8f8f5;border:1px solid #e8e8e3;border-radius:8px;padding:9px 13px;margin-bottom:.65rem;}
+.new-card-banner.show{display:flex;}
+.nc-icon{font-size:24px;}
+.nc-grade{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;}
+.nc-grade.gold{background:#FAC775;color:#412402;}
+.nc-grade.silver{background:#D3D1C7;color:#2C2C2A;}
+.nc-title{font-size:13px;font-weight:700;color:#111;}
+.nc-sub{font-size:11px;color:#888;margin-top:2px;}
+.action-row{display:flex;gap:8px;}
+.btn{background:#fff;border:1px solid #ddd;border-radius:8px;padding:9px 18px;font-size:13px;color:#111;cursor:pointer;font-family:inherit;transition:background .15s;}
+.btn:hover{background:#f5f5f0;}
+.btn.primary{background:#534AB7;border-color:#534AB7;color:#fff;font-weight:700;}
+.btn.primary:hover{background:#3C3489;}
+.coll-section{margin-bottom:1.1rem;}
+.coll-title{font-size:12px;font-weight:700;margin-bottom:7px;display:flex;align-items:center;gap:6px;}
+.coll-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.card-slot{border-radius:8px;height:98px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px;border:1px dashed #ddd;position:relative;}
+.card-slot.earned{border-style:solid;}
+.card-slot.gold-card{border-width:2px;}
+.card-slot .c-icon{font-size:18px;margin-bottom:3px;}
+.card-slot .c-name{font-size:9px;font-weight:700;line-height:1.3;}
+.card-slot .c-sub{font-size:8px;margin-top:2px;opacity:.75;}
+.card-slot .c-grade{position:absolute;top:4px;right:4px;font-size:8px;font-weight:700;padding:1px 5px;border-radius:4px;}
+.c-grade.gold{background:#FAC775;color:#412402;}
+.c-grade.silver{background:#D3D1C7;color:#2C2C2A;}
+.card-slot.empty-slot{color:#ccc;font-size:16px;}
+/* Win */
+.win-wrap{text-align:center;padding:1.5rem 1rem;display:none;}
+.win-wrap.show{display:block;}
+.win-icon{font-size:44px;margin-bottom:8px;}
+.win-title{font-size:21px;font-weight:700;color:#111;margin-bottom:4px;}
+.total-score{font-size:40px;font-weight:700;color:#534AB7;margin:10px 0 4px;}
+.score-rank{display:inline-block;font-size:13px;font-weight:700;padding:4px 16px;border-radius:8px;margin-bottom:1rem;}
+.stat-row{display:flex;justify-content:center;gap:8px;margin-bottom:.85rem;flex-wrap:wrap;}
+.stat-box{background:#f5f5f0;border-radius:8px;padding:9px 14px;text-align:center;min-width:76px;}
+.stat-num{font-size:18px;font-weight:700;color:#111;}
+.stat-lbl{font-size:10px;color:#888;margin-top:2px;}
+.score-breakdown{background:#f8f8f5;border:1px solid #ebebeb;border-radius:12px;padding:1rem;margin-bottom:.85rem;text-align:left;}
+.sb-title{font-size:12px;font-weight:700;color:#888;margin-bottom:8px;}
+.sb-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #ebebeb;font-size:13px;color:#111;}
+.sb-row:last-child{border-bottom:none;font-weight:700;}
+.sb-val{font-weight:700;color:#534AB7;}
+.name-section{background:#f0eefb;border:1px solid #d4d0f0;border-radius:12px;padding:1rem;margin-bottom:.85rem;text-align:left;}
+.name-section label{font-size:12px;font-weight:700;color:#534AB7;display:block;margin-bottom:6px;}
+.name-row{display:flex;gap:8px;}
+.name-input{flex:1;background:#fff;border:1px solid #c4c0f0;border-radius:8px;padding:8px 12px;font-size:13px;color:#111;font-family:inherit;}
+.name-input:focus{outline:none;border-color:#7F77DD;}
+.submit-btn{background:#534AB7;border:none;border-radius:8px;padding:8px 16px;font-size:13px;color:#fff;cursor:pointer;font-weight:700;font-family:inherit;white-space:nowrap;}
+.submit-btn:hover{background:#3C3489;}
+.submit-btn:disabled{opacity:.5;cursor:default;}
+.register-msg{font-size:12px;margin-top:6px;}
+.register-msg.ok{color:#0F6E56;}
+.register-msg.err{color:#A32D2D;}
+/* Ranking */
+.ranking-wrap{padding:.25rem 0;}
+.ranking-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;}
+.ranking-title{font-size:14px;font-weight:700;color:#111;}
+.refresh-btn{font-size:11px;color:#666;background:#f5f5f0;border:1px solid #e8e8e3;border-radius:8px;padding:4px 10px;cursor:pointer;font-family:inherit;}
+.refresh-btn:hover{background:#fff;}
+.rank-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;margin-bottom:5px;border:1px solid #ebebeb;background:#fff;transition:background .1s;}
+.rank-row.me{border-color:#7F77DD;background:#f0eefb;}
+.rank-row.top1{border-color:#FAC775;background:#FAEEDA;}
+.rank-num{font-size:14px;font-weight:700;min-width:28px;text-align:center;color:#888;}
+.rank-num.gold{color:#854F0B;}
+.rank-num.silver{color:#5F5E5A;}
+.rank-num.bronze{color:#8B4513;}
+.rank-name{flex:1;font-size:13px;font-weight:700;color:#111;}
+.rank-meta{font-size:11px;color:#888;text-align:right;line-height:1.6;}
+.rank-score{font-size:15px;font-weight:700;color:#534AB7;min-width:64px;text-align:right;}
+.rank-grade{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700;}
+.rank-grade.S{background:#FAEEDA;color:#412402;}
+.rank-grade.A{background:#eeedfe;color:#26215C;}
+.rank-grade.B{background:#E1F5EE;color:#04342C;}
+.rank-grade.C{background:#E6F1FB;color:#042C53;}
+.rank-grade.D{background:#f5f5f0;color:#888;}
+.rank-empty{text-align:center;padding:2rem;color:#888;font-size:13px;line-height:1.8;}
+.rank-loading{text-align:center;padding:1.5rem;color:#aaa;font-size:13px;}
+.my-rank-badge{display:none;background:#eeedfe;color:#26215C;font-size:11px;font-weight:700;padding:3px 10px;border-radius:8px;margin-left:6px;}
+.top-info{background:#f0eefb;border:1px solid #d4d0f0;border-radius:10px;padding:10px 14px;margin-bottom:1rem;font-size:12px;color:#534AB7;line-height:1.6;}
+.conn-status{font-size:11px;padding:2px 8px;border-radius:6px;margin-left:6px;}
+.conn-status.online{background:#E1F5EE;color:#0F6E56;}
+.conn-status.offline{background:#FCEBEB;color:#A32D2D;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="top-info">
+    📚 <strong>아시아 종교 카드 컬렉션 게임</strong> — 중학교 사회/지리 | 4대 종교 카드 20장을 모두 수집하세요! 틀린 문제는 다시 출제됩니다.
+  </div>
+  <div class="header">
+    <div class="title">아시아 종교 카드 컬렉션</div>
+    <div class="hud">
+      <div class="score-pill">점수 <span id="score-display">0</span></div>
+      <div class="combo-pill" id="combo-pill">🔥 <span id="combo-num">0</span>콤보</div>
+      <div class="hud-pill">힌트 <span id="hint-left">3</span>개</div>
+      <div class="hud-pill">⏱ <span id="timer-display">00:00</span></div>
+    </div>
+  </div>
+  <div class="tab-row">
+    <div class="tab active" onclick="switchTab('quiz')" id="tab-quiz">퀴즈</div>
+    <div class="tab" onclick="switchTab('collection')" id="tab-coll">컬렉션</div>
+    <div class="tab" onclick="switchTab('ranking')" id="tab-rank">🏅 랭킹 <span class="conn-status" id="conn-status"></span></div>
+  </div>
+
+  <div id="quiz-section">
+    <div class="prog-label" id="prog-label">전체 진행도: 0 / 20 카드 수집</div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="r-bars" id="r-bars"></div>
+    <div class="q-card">
+      <div class="q-meta">
+        <span class="q-badge" id="q-badge"></span>
+        <span class="q-num" id="q-num">문제 1</span>
+        <span class="retry-badge" id="retry-badge">🔄 다시 도전!</span>
+      </div>
+      <div class="q-text" id="q-text">로딩 중...</div>
+      <div class="hint-row">
+        <button class="hint-btn" id="hint-btn" onclick="useHint()">💡 힌트 사용</button>
+        <span class="hint-used-badge" id="hint-used-badge">힌트 사용 — 실버 카드</span>
+      </div>
+      <div class="hint-box" id="hint-box"></div>
+    </div>
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="combo-banner" id="combo-banner">
+      <div class="cb-num" id="combo-banner-num"></div>
+      <div class="cb-txt" id="combo-banner-txt"></div>
+    </div>
+    <div class="new-card-banner" id="new-banner">
+      <div class="nc-icon" id="nc-icon"></div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+          <div class="nc-title" id="nc-title"></div>
+          <span class="nc-grade" id="nc-grade"></span>
+        </div>
+        <div class="nc-sub" id="nc-sub"></div>
+      </div>
+    </div>
+    <div class="action-row" id="action-row" style="display:none">
+      <button class="btn" id="next-btn" onclick="nextQuestion()">다음 문제 →</button>
+    </div>
+  </div>
+
+  <div id="coll-section" style="display:none"><div id="coll-content"></div></div>
+
+  <div id="ranking-section" style="display:none">
+    <div class="ranking-wrap">
+      <div class="ranking-header">
+        <div class="ranking-title">🏅 전체 랭킹 <span class="my-rank-badge" id="my-rank-badge"></span></div>
+        <button class="refresh-btn" onclick="loadRanking()">↻ 새로고침</button>
+      </div>
+      <div id="ranking-list"><div class="rank-loading">랭킹을 불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <div class="win-wrap" id="win-screen">
+    <div class="win-icon" id="win-icon">🏆</div>
+    <div class="win-title">컬렉션 완성!</div>
+    <div class="total-score" id="total-score">0점</div>
+    <div class="score-rank" id="score-rank"></div>
+    <div class="stat-row" id="win-stats"></div>
+    <div class="score-breakdown" id="score-breakdown"></div>
+    <div class="name-section" id="name-section">
+      <label>🏅 랭킹에 등록할 이름을 입력하세요</label>
+      <div class="name-row">
+        <input class="name-input" id="name-input" type="text" placeholder="이름 또는 닉네임 (최대 12자)" maxlength="12">
+        <button class="submit-btn" id="submit-btn" onclick="submitScore()">등록</button>
+      </div>
+      <div class="register-msg" id="register-msg"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn" onclick="showRankingFromWin()">🏅 랭킹 보기</button>
+      <button class="btn primary" onclick="restartGame()">다시 하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC_ENQypvNoezqiUPa4T0nax7Q6LTwqvEM",
+  authDomain: "religion-game-1fa36.firebaseapp.com",
+  projectId: "religion-game-1fa36",
+  storageBucket: "religion-game-1fa36.firebasestorage.app",
+  messagingSenderId: "492466436408",
+  appId: "1:492466436408:web:025cbc8f00afe10596a9cd",
+  databaseURL: "https://religion-game-1fa36-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const rankingsRef = ref(db, 'rankings');
+
+// 연결 상태 표시
+const connRef = ref(db, '.info/connected');
+onValue(connRef, (snap) => {
+  const el = document.getElementById('conn-status');
+  if (snap.val()) {
+    el.textContent = '● 연결됨';
+    el.className = 'conn-status online';
+  } else {
+    el.textContent = '● 오프라인';
+    el.className = 'conn-status offline';
+  }
+});
+
+// 전역에 Firebase 함수 노출
+window._fbSet = async (key, data) => {
+  await set(ref(db, 'rankings/' + key), data);
+};
+window._fbGetAll = async () => {
+  const snap = await get(rankingsRef);
+  return snap.exists() ? snap.val() : {};
+};
+window._fbReady = true;
+</script>
+
+<script>
+const RELIGIONS=[
+  {id:'buddhism',name:'불교',icon:'☸️',color:'#534AB7',bg:'#EEEDFE',textColor:'#26215C',barColor:'#7F77DD'},
+  {id:'hinduism',name:'힌두교',icon:'🕉️',color:'#B85C00',bg:'#FAEEDA',textColor:'#412402',barColor:'#EF9F27'},
+  {id:'islam',name:'이슬람교',icon:'☪️',color:'#0F6E56',bg:'#E1F5EE',textColor:'#04342C',barColor:'#1D9E75'},
+  {id:'christianity',name:'크리스트교',icon:'✝️',color:'#185FA5',bg:'#E6F1FB',textColor:'#042C53',barColor:'#378ADD'},
+];
+const ALL_CARDS=[
+  {religion:'buddhism',name:'깨달음',sub:'석가모니의 가르침',icon:'☸️'},
+  {religion:'buddhism',name:'살생 금지',sub:'생명 존중 계율',icon:'🌿'},
+  {religion:'buddhism',name:'채식 문화',sub:'불교식 식문화',icon:'🥗'},
+  {religion:'buddhism',name:'불탑',sub:'부처의 사리 안치',icon:'🗼'},
+  {religion:'buddhism',name:'왓 프라싱',sub:'타이 대표 사원',icon:'🏯'},
+  {religion:'hinduism',name:'수많은 신',sub:'다신 숭배',icon:'🕉️'},
+  {religion:'hinduism',name:'카스트 제도',sub:'전통 신분 제도',icon:'📜'},
+  {religion:'hinduism',name:'소 숭배',sub:'신성한 동물',icon:'🐄'},
+  {religion:'hinduism',name:'갠지스강',sub:'성스러운 강',icon:'🌊'},
+  {religion:'hinduism',name:'브라만 채식',sub:'상위 계층 식문화',icon:'🌾'},
+  {religion:'islam',name:'쿠란',sub:'이슬람 경전',icon:'📖'},
+  {religion:'islam',name:'할랄 음식',sub:'율법 허용 음식',icon:'🍽️'},
+  {religion:'islam',name:'모스크',sub:'이슬람 사원',icon:'🕌'},
+  {religion:'islam',name:'카바 신전',sub:'사우디 성지',icon:'🕋'},
+  {religion:'islam',name:'아라베스크',sub:'기하학 문양 장식',icon:'🔷'},
+  {religion:'christianity',name:'예수 그리스도',sub:'구원자',icon:'✝️'},
+  {religion:'christianity',name:'성경',sub:'기독교 경전',icon:'📕'},
+  {religion:'christianity',name:'종탑',sub:'교회 건축 요소',icon:'⛪'},
+  {religion:'christianity',name:'성묘 교회',sub:'이스라엘 성지',icon:'🏛️'},
+  {religion:'christianity',name:'주일 예배',sub:'매주 일요일 의례',icon:'🙏'},
+];
+const ALL_QUESTIONS=[
+  {religion:'buddhism',q:'불교를 창시한 인물은 누구인가요?',choices:['석가모니','무함마드','예수','비슈누'],answer:'석가모니',explain:'불교는 석가모니의 가르침을 바탕으로 수행을 통해 깨달음을 얻고자 하는 종교입니다.',hint:'인도에서 태어난 왕자 출신입니다.',card:'깨달음'},
+  {religion:'buddhism',q:'불교에서 생명을 소중히 여겨 엄격히 금지하는 것은?',choices:['살생','음주','거짓말','도박'],answer:'살생',explain:'불교는 모든 생명이 소중하고 평등하다는 평등 사상을 바탕으로 살생을 엄격히 금지합니다.',hint:'불교의 채식 문화와 직접 연결된 계율입니다.',card:'살생 금지'},
+  {religion:'buddhism',q:'불교의 살생 금지 계율로 발달한 식문화는?',choices:['채식 위주','육식 위주','해산물 위주','할랄 음식'],answer:'채식 위주',explain:'살생 금지 원칙 때문에 불교에서는 고기보다 채식 위주의 식문화가 발달하였습니다.',hint:'스리랑카 등 불교 국가에서 두드러집니다.',card:'채식 문화'},
+  {religion:'buddhism',q:'부처의 사리(유골)를 모시기 위해 세운 불교 건축물은?',choices:['불탑','모스크','종탑','사당'],answer:'불탑',explain:'사찰에 가면 부처의 사리를 모시는 불탑과 불상을 볼 수 있습니다.',hint:'사찰(절)에서 볼 수 있는 탑 형태의 구조물입니다.',card:'불탑'},
+  {religion:'buddhism',q:'화려한 불탑과 불교 건축 양식을 볼 수 있는 타이의 대표 사원은?',choices:['왓 프라싱 사원','카바 신전','성묘 교회','갠지스 사원'],answer:'왓 프라싱 사원',explain:'타이의 왓 프라싱 사원은 불교의 화려한 불탑과 건축 양식을 보여주는 대표적인 종교 경관입니다.',hint:'태국(타이) 치앙마이에 위치한 사원입니다.',card:'왓 프라싱'},
+  {religion:'hinduism',q:'힌두교는 어떤 형태로 신을 숭배하는 종교인가요?',choices:['수많은 신 숭배','유일신 숭배','신을 믿지 않음','조상 숭배'],answer:'수많은 신 숭배',explain:'힌두교는 하나의 신이 아니라 수많은 신을 숭배하는 다신교 종교입니다.',hint:'이슬람교·크리스트교와 반대되는 신관입니다.',card:'수많은 신'},
+  {religion:'hinduism',q:'힌두교와 밀접하게 연결된 인도의 전통 신분 제도는?',choices:['카스트 제도','할랄 제도','선민 제도','봉건 제도'],answer:'카스트 제도',explain:'힌두교는 인도의 전통적인 신분 제도인 카스트 제도와 밀접하게 연결되어 있습니다.',hint:'사람의 계급을 나누는 전통적인 사회 구조입니다.',card:'카스트 제도'},
+  {religion:'hinduism',q:'힌두교에서 신의 탈것으로 여겨 신성시하는 동물은?',choices:['소','돼지','원숭이','코끼리'],answer:'소',explain:'힌두교도들은 소를 신의 탈것으로 여겨 매우 신성시하기 때문에 소고기를 먹지 않는 금기가 생활화되어 있습니다.',hint:'인도 거리에서 자유롭게 돌아다니는 것을 볼 수 있습니다.',card:'소 숭배'},
+  {religion:'hinduism',q:'힌두교도들이 죄를 씻고 영혼을 정화하기 위해 목욕하는 성스러운 강은?',choices:['갠지스강','나일강','황하강','인더스강'],answer:'갠지스강',explain:'인도 사람들은 갠지스강에서 목욕하는 것을 평생의 소원으로 삼습니다.',hint:'인도를 대표하는 강으로 수억 명의 종교 의례가 이루어집니다.',card:'갠지스강'},
+  {religion:'hinduism',q:'힌두교 카스트 상급 계층 브라만이 지키는 식문화는?',choices:['엄격한 채식','소고기 위주','할랄 음식','아무 음식이나 먹음'],answer:'엄격한 채식',explain:'카스트 제도의 영향으로 상급 계층인 브라만은 엄격한 채식을 합니다.',hint:'브라만은 카스트 제도에서 가장 높은 계층입니다.',card:'브라만 채식'},
+  {religion:'islam',q:'이슬람교에서 알라의 계시가 담긴 경전은?',choices:['쿠란','성경','베다','불경'],answer:'쿠란',explain:'이슬람교는 유일신 알라의 계시가 담긴 쿠란의 가르침과 이슬람 율법을 철저히 지키며 살아가는 종교입니다.',hint:'이슬람교의 창시자 무함마드가 받은 계시가 담겨 있습니다.',card:'쿠란'},
+  {religion:'islam',q:'이슬람 율법에 따라 허용된 깨끗한 음식을 무엇이라 하나요?',choices:['할랄 음식','코셔 음식','채식','사찰 음식'],answer:'할랄 음식',explain:'이슬람 신자들은 율법에 따라 허용된 깨끗한 음식인 할랄 음식만 먹습니다.',hint:'우즈베키스탄 친구들이 돼지고기를 먹지 않는 이유와 관련됩니다.',card:'할랄 음식'},
+  {religion:'islam',q:'이슬람 사원 모스크의 대표적인 건축 특징 두 가지는?',choices:['돔 지붕과 첨탑','뾰족한 종탑과 십자가','불탑과 불상','기둥과 삼각형 지붕'],answer:'돔 지붕과 첨탑',explain:'이슬람 사원인 모스크는 둥근 돔 지붕과 높이 솟은 첨탑이 특징입니다.',hint:'둥근 지붕과 기도 시간을 알리는 높은 탑이 있습니다.',card:'모스크'},
+  {religion:'islam',q:'전 세계 무슬림이 기도 방향의 기준으로 삼는 사우디아라비아의 성지는?',choices:['카바 신전','성묘 교회','왓 프라싱','갠지스 사원'],answer:'카바 신전',explain:'사우디아라비아의 카바 신전은 전 세계 무슬림들이 기도할 때 방향의 기준이 되는 가장 신성한 장소입니다.',hint:'메카에 위치한 검은 정육면체 형태의 건물입니다.',card:'카바 신전'},
+  {religion:'islam',q:'모스크 내부를 인물 대신 기하학적 무늬로 장식하는 예술 양식은?',choices:['아라베스크','모자이크','프레스코','수묵화'],answer:'아라베스크',explain:'모스크 내부 벽면은 우상 숭배를 금지하는 교리에 따라 기하학적 무늬인 아라베스크 문양으로 화려하게 장식됩니다.',hint:'우상 숭배 금지 교리 때문에 인물화 대신 사용합니다.',card:'아라베스크'},
+  {religion:'christianity',q:'크리스트교에서 인류를 구원할 구원자로 믿는 인물은?',choices:['예수 그리스도','석가모니','무함마드','비슈누'],answer:'예수 그리스도',explain:'크리스트교는 하느님을 섬기고, 예수 그리스도를 인류를 구원할 구원자로 믿는 종교입니다.',hint:'성경의 신약에 등장하는 중심 인물입니다.',card:'예수 그리스도'},
+  {religion:'christianity',q:'크리스트교 신자들이 따르는 경전은?',choices:['성경','쿠란','베다','불경'],answer:'성경',explain:'크리스트교 신자들은 매주 일요일 교회나 성당에 모여 예배를 드리고 성경의 가르침을 따릅니다.',hint:'구약과 신약으로 이루어진 책입니다.',card:'성경'},
+  {religion:'christianity',q:'크리스트교 교회의 대표적인 건축 요소가 아닌 것은?',choices:['첨탑(미나렛)','십자가','종탑','예수상'],answer:'첨탑(미나렛)',explain:'크리스트교 교회의 대표 건축 요소는 종탑, 십자가, 예수상입니다. 첨탑(미나렛)은 모스크의 건축 요소입니다.',hint:'나머지 셋은 교회에서 볼 수 있지만 하나는 모스크에서 볼 수 있습니다.',card:'종탑'},
+  {religion:'christianity',q:'예수의 무덤이 있다고 알려진 이스라엘의 성지는?',choices:['성묘 교회','카바 신전','왓 프라싱','성 소피아 성당'],answer:'성묘 교회',explain:'이스라엘에 위치한 성묘 교회는 예수의 무덤이 있다고 알려진 곳으로, 전 세계 신자들이 찾는 성스러운 경관입니다.',hint:'예루살렘에 위치하며 전 세계 크리스트교 순례지입니다.',card:'성묘 교회'},
+  {religion:'christianity',q:'4대 종교 중 크리스트교만의 특징으로 올바른 것은?',choices:['특별한 음식 금기가 거의 없음','돼지고기를 금함','소고기를 금함','채식만 함'],answer:'특별한 음식 금기가 거의 없음',explain:'불교·힌두교·이슬람교와 달리 크리스트교는 일부 종파를 제외하면 특별한 음식 금기가 거의 없습니다.',hint:'다른 3대 종교와 비교해보면 음식 제한이 가장 적은 종교입니다.',card:'주일 예배'},
+];
+
+function getReligion(id){return RELIGIONS.find(r=>r.id===id);}
+function getCard(religion,name){return ALL_CARDS.find(c=>c.religion===religion&&c.name===name);}
+function shuffle(arr){return[...arr].sort(()=>Math.random()-.5);}
+function formatTime(s){const m=Math.floor(s/60),sec=s%60;return(m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;}
+function getComboMult(c){if(c>=10)return 3.0;if(c>=7)return 2.0;if(c>=5)return 1.5;if(c>=3)return 1.2;return 1.0;}
+function getRankGrade(s){if(s>=3500)return'S';if(s>=2800)return'A';if(s>=2000)return'B';if(s>=1200)return'C';return'D';}
+function getRankLabel(s){
+  if(s>=3500)return{label:'🏆 S등급 — 완벽!',bg:'#FAEEDA',color:'#412402'};
+  if(s>=2800)return{label:'🥇 A등급 — 훌륭해요!',bg:'#eeedfe',color:'#26215C'};
+  if(s>=2000)return{label:'🥈 B등급 — 잘했어요!',bg:'#E1F5EE',color:'#04342C'};
+  if(s>=1200)return{label:'🥉 C등급 — 좋아요!',bg:'#E6F1FB',color:'#042C53'};
+  return{label:'📚 D등급 — 다시 도전!',bg:'#f5f5f0',color:'#888'};
+}
+// 이름을 Firebase 키로 변환 (특수문자 제거)
+function nameToKey(name){return name.replace(/[.#$[\]/]/g,'_');}
+
+let pendingQueue=[],wrongQueue=[],collected=new Set(),cardGrades={};
+let totalAnswered=0,correctCount=0,answered=false,combo=0,maxCombo=0;
+let totalScore=0,scoreBase=0,scoreSpeed=0,scoreCombo=0,scoreGold=0,scorePenalty=0;
+let hintLeft=3,hintUsedThisQ=false;
+let timerInterval=null,elapsedSeconds=0,gameStarted=false,gameEnded=false;
+let currentQ=null,isRetry=false,qStartTime=0;
+let mySubmittedName=null;
+
+function startTimer(){if(timerInterval)clearInterval(timerInterval);timerInterval=setInterval(()=>{elapsedSeconds++;document.getElementById('timer-display').textContent=formatTime(elapsedSeconds);},1000);}
+function stopTimer(){if(timerInterval){clearInterval(timerInterval);timerInterval=null;}}
+
+function initGame(){
+  pendingQueue=shuffle([...ALL_QUESTIONS]);wrongQueue=[];collected=new Set();cardGrades={};
+  totalAnswered=0;correctCount=0;answered=false;combo=0;maxCombo=0;
+  totalScore=0;scoreBase=0;scoreSpeed=0;scoreCombo=0;scoreGold=0;scorePenalty=0;
+  hintLeft=3;hintUsedThisQ=false;elapsedSeconds=0;gameStarted=false;gameEnded=false;
+  currentQ=null;isRetry=false;qStartTime=0;mySubmittedName=null;
+  document.getElementById('timer-display').textContent='00:00';
+  document.getElementById('hint-left').textContent='3';
+  document.getElementById('score-display').textContent='0';
+  document.getElementById('combo-pill').classList.remove('show');
+  document.getElementById('win-screen').classList.remove('show');
+  document.getElementById('quiz-section').style.display='';
+  document.getElementById('register-msg').textContent='';
+  document.getElementById('name-input').value='';
+  document.getElementById('submit-btn').disabled=false;
+  document.getElementById('submit-btn').textContent='등록';
+  document.getElementById('name-section').style.opacity='1';
+  document.getElementById('my-rank-badge').style.display='none';
+  stopTimer();renderRBars();updateProgress();showQuestion();switchTab('quiz');
+}
+
+function getNextQuestion(){
+  if(pendingQueue.length>0)return{q:pendingQueue.shift(),retry:false};
+  if(wrongQueue.length>0)return{q:wrongQueue.shift(),retry:true};
+  return null;
+}
+
+function showQuestion(){
+  if(collected.size>=20){endGame();return;}
+  const next=getNextQuestion();
+  if(!next){endGame();return;}
+  currentQ=next.q;isRetry=next.retry;answered=false;hintUsedThisQ=false;
+  qStartTime=Date.now();
+  const rel=getReligion(currentQ.religion);
+  const badge=document.getElementById('q-badge');
+  badge.textContent=rel.icon+' '+rel.name;badge.style.background=rel.bg;badge.style.color=rel.textColor;
+  totalAnswered++;
+  document.getElementById('q-num').textContent='문제 '+totalAnswered;
+  document.getElementById('retry-badge').classList.toggle('show',isRetry);
+  document.getElementById('q-text').textContent=currentQ.q;
+  const hb=document.getElementById('hint-btn');
+  hb.disabled=hintLeft<=0;hb.textContent='💡 힌트 사용 (남은 '+hintLeft+'회)';
+  document.getElementById('hint-box').className='hint-box';
+  document.getElementById('hint-used-badge').className='hint-used-badge';
+  const choices=shuffle(currentQ.choices);
+  const el=document.getElementById('choices');el.innerHTML='';
+  choices.forEach(c=>{
+    const btn=document.createElement('button');btn.className='cbtn';btn.textContent=c;
+    btn.onclick=()=>selectAnswer(c,btn);el.appendChild(btn);
+  });
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('feedback').innerHTML='';
+  document.getElementById('combo-banner').className='combo-banner';
+  document.getElementById('new-banner').className='new-card-banner';
+  document.getElementById('action-row').style.display='none';
+}
+
+function useHint(){
+  if(hintUsedThisQ||hintLeft<=0||answered)return;
+  hintUsedThisQ=true;hintLeft--;
+  document.getElementById('hint-left').textContent=hintLeft;
+  document.getElementById('hint-btn').disabled=true;
+  document.getElementById('hint-btn').textContent='💡 힌트 사용 (남은 '+hintLeft+'회)';
+  document.getElementById('hint-box').className='hint-box show';
+  document.getElementById('hint-box').textContent='힌트: '+currentQ.hint;
+  document.getElementById('hint-used-badge').className='hint-used-badge show';
+}
+
+function selectAnswer(val,btn){
+  if(answered)return;
+  if(!gameStarted){gameStarted=true;startTimer();}
+  answered=true;
+  const elapsed=(Date.now()-qStartTime)/1000;
+  const correct=val===currentQ.answer;
+  document.querySelectorAll('.cbtn').forEach(b=>{
+    b.disabled=true;
+    if(b.textContent===currentQ.answer)b.classList.add('correct');
+    if(b===btn&&!correct)b.classList.add('wrong');
+  });
+  const fb=document.getElementById('feedback');
+  if(correct){
+    correctCount++;combo++;if(combo>maxCombo)maxCombo=combo;
+    let earned=0;
+    if(!collected.has(currentQ.card)){
+      const base=100;
+      let speed=0;
+      if(elapsed<=5)speed=50;else if(elapsed<=10)speed=30;else if(elapsed<=15)speed=10;
+      const mult=getComboMult(combo);
+      const gold=hintUsedThisQ?0:30;
+      earned=Math.round((base+speed)*mult)+gold;
+      scoreBase+=base;scoreSpeed+=speed;
+      scoreCombo+=Math.round((base+speed)*(mult-1));
+      scoreGold+=gold;totalScore+=earned;
+      document.getElementById('score-display').textContent=totalScore;
+    }
+    const sl=elapsed<=5?'⚡번개':elapsed<=10?'🏃빠름':elapsed<=15?'적당':'';
+    const ml=getComboMult(combo)>1?combo+'콤보×'+getComboMult(combo).toFixed(1):'';
+    const parts=[sl,ml].filter(Boolean).join(', ');
+    fb.className='feedback ok show';
+    fb.innerHTML='정답! '+currentQ.explain+(earned>0?`<span class="score-popup">+${earned}점${parts?' ('+parts+')':''}</span>`:'');
+    updateComboPill();
+    if(combo>=3)showComboBanner();
+    if(!collected.has(currentQ.card)){
+      const grade=hintUsedThisQ?'silver':'gold';
+      collected.add(currentQ.card);cardGrades[currentQ.card]=grade;
+      showNewCard(currentQ,grade);updateProgress();renderRBars();renderCollection();
+    }
+    if(collected.size>=20)document.getElementById('next-btn').textContent='결과 보기 →';
+  }else{
+    combo=0;updateComboPill();
+    scorePenalty+=10;totalScore=Math.max(0,totalScore-10);
+    document.getElementById('score-display').textContent=totalScore;
+    fb.className='feedback no show';
+    fb.innerHTML='오답! 정답은 "'+currentQ.answer+'"입니다. '+currentQ.explain+' <span class="score-popup" style="background:#FCEBEB;color:#A32D2D;border-color:#F09595;">-10점</span>';
+    const insertAt=Math.floor(Math.random()*(wrongQueue.length+1));
+    wrongQueue.splice(insertAt,0,currentQ);
+  }
+  document.getElementById('action-row').style.display='flex';
+}
+
+function updateComboPill(){
+  const p=document.getElementById('combo-pill');
+  if(combo>=3){p.classList.add('show');document.getElementById('combo-num').textContent=combo;}
+  else p.classList.remove('show');
+}
+function showComboBanner(){
+  const msgs={3:'연속 정답! 이 기세 그대로!',5:'대단해요! 멈추지 마세요!',7:'믿기 어려운 실력이에요!',10:'완벽합니다!'};
+  const key=Object.keys(msgs).filter(k=>combo===parseInt(k)).pop();
+  if(!key)return;
+  document.getElementById('combo-banner-num').textContent=combo+'콤보!';
+  document.getElementById('combo-banner-txt').textContent=msgs[key];
+  document.getElementById('combo-banner').className='combo-banner show';
+}
+function showNewCard(q,grade){
+  const card=getCard(q.religion,q.card);const rel=getReligion(q.religion);
+  document.getElementById('nc-icon').textContent=card?card.icon:rel.icon;
+  document.getElementById('nc-title').textContent=rel.icon+' '+q.card+' 카드 획득!';
+  const ge=document.getElementById('nc-grade');
+  ge.textContent=grade==='gold'?'★ 골드':'☆ 실버';ge.className='nc-grade '+(grade==='gold'?'gold':'silver');
+  document.getElementById('nc-sub').textContent=(card?card.sub:'')+(grade==='silver'?' · 힌트 사용':'');
+  document.getElementById('new-banner').className='new-card-banner show';
+}
+function nextQuestion(){if(collected.size>=20){endGame();return;}showQuestion();}
+function updateProgress(){
+  const pct=Math.round((collected.size/20)*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-label').textContent='전체 진행도: '+collected.size+' / 20 카드 수집';
+}
+function renderRBars(){
+  const el=document.getElementById('r-bars');el.innerHTML='';
+  RELIGIONS.forEach(r=>{
+    const total=ALL_CARDS.filter(c=>c.religion===r.id).length;
+    const got=ALL_CARDS.filter(c=>c.religion===r.id&&collected.has(c.name)).length;
+    const pct=Math.round((got/total)*100);
+    el.innerHTML+=`<div class="r-bar"><div class="r-bar-top"><span class="r-name" style="color:${r.color}">${r.icon} ${r.name}</span><span class="r-count">${got}/${total}</span></div><div class="r-track"><div class="r-fill" style="width:${pct}%;background:${r.barColor}"></div></div></div>`;
+  });
+}
+function renderCollection(){
+  const el=document.getElementById('coll-content');let html='';
+  RELIGIONS.forEach(r=>{
+    const cards=ALL_CARDS.filter(c=>c.religion===r.id);
+    html+=`<div class="coll-section"><div class="coll-title" style="color:${r.color}">${r.icon} ${r.name} <span style="color:#aaa;font-weight:400">${cards.filter(c=>collected.has(c.name)).length}/5</span></div><div class="coll-grid">`;
+    cards.forEach(c=>{
+      if(collected.has(c.name)){
+        const grade=cardGrades[c.name]||'silver';const rel=getReligion(r.id);
+        const bc=grade==='gold'?'#FAC775':rel.barColor;
+        html+=`<div class="card-slot earned ${grade==='gold'?'gold-card':''}" style="background:${rel.bg};border-color:${bc}"><span class="c-grade ${grade}">${grade==='gold'?'★':'☆'}</span><div class="c-icon">${c.icon}</div><div class="c-name" style="color:${rel.textColor}">${c.name}</div><div class="c-sub" style="color:${rel.textColor}">${c.sub}</div></div>`;
+      }else{
+        html+=`<div class="card-slot empty-slot">?</div>`;
+      }
+    });
+    html+='</div></div>';
+  });
+  el.innerHTML=html;
+}
+
+function endGame(){
+  stopTimer();gameEnded=true;
+  document.getElementById('quiz-section').style.display='none';
+  document.getElementById('win-screen').classList.add('show');
+  const goldCount=Object.values(cardGrades).filter(g=>g==='gold').length;
+  const rank=getRankLabel(totalScore);
+  document.getElementById('win-icon').textContent=totalScore>=3500?'🏆':totalScore>=2800?'🥇':totalScore>=2000?'🥈':'🎴';
+  document.getElementById('total-score').textContent=totalScore.toLocaleString()+'점';
+  const re=document.getElementById('score-rank');re.textContent=rank.label;re.style.background=rank.bg;re.style.color=rank.color;
+  document.getElementById('win-stats').innerHTML=`
+    <div class="stat-box"><div class="stat-num">${formatTime(elapsedSeconds)}</div><div class="stat-lbl">완성 시간</div></div>
+    <div class="stat-box"><div class="stat-num">${correctCount}</div><div class="stat-lbl">정답 횟수</div></div>
+    <div class="stat-box"><div class="stat-num">${maxCombo}</div><div class="stat-lbl">최고 콤보</div></div>
+    <div class="stat-box"><div class="stat-num">${goldCount}</div><div class="stat-lbl">골드 카드</div></div>
+  `;
+  document.getElementById('score-breakdown').innerHTML=`
+    <div class="sb-title">점수 내역</div>
+    <div class="sb-row"><span>기본 점수 (카드 20장 × 100)</span><span class="sb-val">+${scoreBase}</span></div>
+    <div class="sb-row"><span>속도 보너스</span><span class="sb-val">+${scoreSpeed}</span></div>
+    <div class="sb-row"><span>콤보 보너스 (최고 ${maxCombo}콤보)</span><span class="sb-val">+${scoreCombo}</span></div>
+    <div class="sb-row"><span>골드 카드 보너스 (${goldCount}장 × 30)</span><span class="sb-val">+${scoreGold}</span></div>
+    <div class="sb-row"><span>오답 페널티</span><span class="sb-val" style="color:#A32D2D">-${scorePenalty}</span></div>
+    <div class="sb-row"><span>최종 점수</span><span class="sb-val" style="font-size:15px">${totalScore.toLocaleString()}점</span></div>
+  `;
+}
+
+// ── Firebase 랭킹 ──
+async function submitScore(){
+  const nameEl=document.getElementById('name-input');
+  const name=nameEl.value.trim();
+  const msg=document.getElementById('register-msg');
+  const btn=document.getElementById('submit-btn');
+  if(!name){msg.className='register-msg err';msg.textContent='이름을 입력해 주세요.';return;}
+  if(!window._fbReady){msg.className='register-msg err';msg.textContent='Firebase 연결 중입니다. 잠시 후 다시 시도해 주세요.';return;}
+  btn.disabled=true;btn.textContent='등록 중...';
+  try{
+    const key=nameToKey(name);
+    // 기존 점수 확인 후 높은 점수만 저장
+    const allData=await window._fbGetAll();
+    const existing=allData[key];
+    if(existing&&existing.score>=totalScore){
+      msg.className='register-msg ok';
+      msg.textContent='이미 더 높은 점수('+existing.score.toLocaleString()+'점)가 등록되어 있습니다!';
+      btn.textContent='등록 완료';
+      return;
+    }
+    const now=new Date();
+    const dateStr=now.getFullYear()+'.'+(now.getMonth()+1)+'.'+(now.getDate());
+    await window._fbSet(key,{
+      name,score:totalScore,
+      time:formatTime(elapsedSeconds),
+      combo:maxCombo,
+      grade:getRankGrade(totalScore),
+      date:dateStr,
+      ts:now.getTime()
+    });
+    mySubmittedName=name;
+    msg.className='register-msg ok';msg.textContent='🎉 랭킹에 등록되었습니다!';
+    btn.textContent='등록 완료 ✓';
+    document.getElementById('name-section').style.opacity='0.6';
+  }catch(e){
+    msg.className='register-msg err';msg.textContent='오류가 발생했습니다. 인터넷 연결을 확인해 주세요.';
+    btn.disabled=false;btn.textContent='등록';
+  }
+}
+
+async function loadRanking(){
+  const listEl=document.getElementById('ranking-list');
+  listEl.innerHTML='<div class="rank-loading">랭킹을 불러오는 중...</div>';
+  if(!window._fbReady){
+    setTimeout(loadRanking,1000);return;
+  }
+  try{
+    const data=await window._fbGetAll();
+    let entries=Object.values(data||{});
+    entries.sort((a,b)=>b.score-a.score);
+
+    if(entries.length===0){
+      listEl.innerHTML='<div class="rank-empty">아직 등록된 점수가 없어요!<br>게임을 완료하고 첫 번째 랭커가 되어보세요 🏆</div>';
+      return;
+    }
+    // 내 순위 배지
+    if(mySubmittedName){
+      const myIdx=entries.findIndex(e=>e.name===mySubmittedName);
+      if(myIdx>=0){
+        const badge=document.getElementById('my-rank-badge');
+        badge.style.display='inline-block';
+        badge.textContent='내 순위: '+(myIdx+1)+'위';
+      }
+    }
+    const medals=['🥇','🥈','🥉'];
+    let html='';
+    entries.slice(0,50).forEach((e,i)=>{
+      const isMe=mySubmittedName&&e.name===mySubmittedName;
+      const isTop=i===0;
+      const numHtml=i<3
+        ?`<div class="rank-num ${i===0?'gold':i===1?'silver':'bronze'}">${medals[i]}</div>`
+        :`<div class="rank-num">${i+1}</div>`;
+      html+=`<div class="rank-row ${isTop?'top1':''} ${isMe?'me':''}">
+        ${numHtml}
+        <div class="rank-name">${e.name}${isMe?' <span style="font-size:10px;color:#534AB7">(나)</span>':''}</div>
+        <div class="rank-meta">${e.time} · ${e.combo}콤보<br>${e.date||''}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <span class="rank-grade ${e.grade}">${e.grade}등급</span>
+          <div class="rank-score">${e.score.toLocaleString()}</div>
+        </div>
+      </div>`;
+    });
+    listEl.innerHTML=html;
+  }catch(err){
+    listEl.innerHTML='<div class="rank-empty">랭킹을 불러오지 못했습니다.<br>인터넷 연결을 확인해 주세요.</div>';
+  }
+}
+
+function showRankingFromWin(){
+  document.getElementById('win-screen').classList.remove('show');
+  switchTab('ranking');
+}
+
+function restartGame(){
+  document.getElementById('win-screen').classList.remove('show');
+  initGame();
+}
+
+function switchTab(tab){
+  document.getElementById('tab-quiz').classList.toggle('active',tab==='quiz');
+  document.getElementById('tab-coll').classList.toggle('active',tab==='collection');
+  document.getElementById('tab-rank').classList.toggle('active',tab==='ranking');
+  document.getElementById('quiz-section').style.display=tab==='quiz'&&!gameEnded?'':'none';
+  document.getElementById('coll-section').style.display=tab==='collection'?'':'none';
+  document.getElementById('ranking-section').style.display=tab==='ranking'?'':'none';
+  if(tab==='collection')renderCollection();
+  if(tab==='ranking')loadRanking();
+}
+
+initGame();
+</script>
+</body>
+</html>
